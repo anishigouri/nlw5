@@ -25,6 +25,12 @@ type EpisodeProps = {
 };
 
 export default function Episode({ episode }: EpisodeProps) {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <p>Carregando...</p>;
+  }
+
   return (
     <div className={styles.episode}>
       <div className={styles.thumbnailContainer}>
@@ -58,10 +64,41 @@ export default function Episode({ episode }: EpisodeProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
+  const { data } = await api.get("/episodes", {
+    params: {
+      _limit: 2,
+      _sort: "published_at",
+      _order: "desc",
+    },
+  });
+
+  const paths = data.map((episode) => {
+    return {
+      params: {
+        slug: episode.id,
+      },
+    };
+  });
+
   return {
-    paths: [],
+    paths,
     fallback: "blocking",
   };
+
+  // fallback false.
+  /*
+    Irá buscar apenas as rotas que foram passadas dentro de paths, caso contrário retornará 404.
+  */
+
+  // fallback true.
+  /*
+    Irá buscar no backend as informações, porém converterá para html no client
+  */
+
+  // fallback blocking.
+  /*
+    Irá buscar no backend as informações, e converterá para HTML na camada do NEXT
+  */
 };
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
